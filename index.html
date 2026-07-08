@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>影子互文 · 雨 · 高维影子</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #050b1a;
+      overflow: hidden;
+      font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+      color: #fff;
+      user-select: none;
+    }
+    #header {
+      position: absolute;
+      top: 24px;
+      left: 28px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    #header h1 {
+      font-size: 22px;
+      font-weight: 300;
+      letter-spacing: 6px;
+      color: rgba(200, 230, 255, 0.95);
+      text-shadow: 0 0 30px rgba(0, 100, 200, 0.25);
+    }
+    #header p {
+      font-size: 12px;
+      opacity: 0.45;
+      letter-spacing: 3px;
+      color: #8ab4ff;
+      margin-top: 4px;
+    }
+    #footer {
+      position: absolute;
+      bottom: 28px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    #footer span {
+      background: rgba(10, 20, 40, 0.5);
+      backdrop-filter: blur(6px);
+      padding: 6px 22px;
+      border-radius: 40px;
+      border: 1px solid rgba(100, 180, 255, 0.10);
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: rgba(180, 210, 255, 0.5);
+    }
+    #input-panel {
+      position: absolute;
+      bottom: 100px;
+      right: 30px;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      pointer-events: none;
+    }
+    #input-panel * {
+      pointer-events: auto;
+    }
+    #input-panel .panel-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: rgba(150, 200, 255, 0.4);
+      background: rgba(0, 10, 30, 0.6);
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(100, 180, 255, 0.08);
+      backdrop-filter: blur(4px);
+    }
+    #input-row {
+      display: flex;
+      gap: 10px;
+      background: rgba(8, 20, 45, 0.7);
+      backdrop-filter: blur(12px);
+      padding: 8px 10px 8px 18px;
+      border-radius: 48px;
+      border: 1px solid rgba(100, 180, 255, 0.15);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+      transition: border-color 0.3s;
+    }
+    #input-row:focus-within {
+      border-color: rgba(100, 200, 255, 0.4);
+    }
+    #input-row input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #c8e0ff;
+      font-size: 15px;
+      font-family: inherit;
+      width: 200px;
+      padding: 6px 0;
+      letter-spacing: 0.5px;
+    }
+    #input-row input::placeholder {
+      color: rgba(150, 190, 255, 0.25);
+      font-weight: 300;
+      font-size: 13px;
+    }
+    #input-row button {
+      background: linear-gradient(135deg, rgba(60, 160, 255, 0.25), rgba(40, 100, 255, 0.15));
+      border: 1px solid rgba(100, 180, 255, 0.2);
+      color: #aac8ff;
+      padding: 6px 20px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-family: inherit;
+      backdrop-filter: blur(4px);
+    }
+    #input-row button:hover {
+      background: linear-gradient(135deg, rgba(60, 160, 255, 0.4), rgba(40, 100, 255, 0.25));
+      border-color: rgba(100, 200, 255, 0.4);
+      color: #d6ecff;
+      box-shadow: 0 0 30px rgba(60, 160, 255, 0.15);
+    }
+    #input-row button:active {
+      transform: scale(0.96);
+    }
+    #toast {
+      position: absolute;
+      bottom: 180px;
+      right: 30px;
+      z-index: 35;
+      background: rgba(8, 25, 55, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 10px 22px;
+      border-radius: 30px;
+      border: 1px solid rgba(100, 200, 255, 0.15);
+      font-size: 13px;
+      color: #8cc4ff;
+      letter-spacing: 1px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #memory-badge {
+      position: absolute;
+      bottom: 170px;
+      right: 30px;
+      z-index: 25;
+      font-size: 11px;
+      color: rgba(150, 200, 255, 0.3);
+      background: rgba(0, 10, 30, 0.4);
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(100, 180, 255, 0.06);
+      pointer-events: none;
+      letter-spacing: 1px;
+      backdrop-filter: blur(2px);
+    }
+    @media (max-width: 640px) {
+      #header h1 { font-size: 17px; letter-spacing: 4px; }
+      #header { top: 16px; left: 18px; }
+      #input-panel { bottom: 70px; right: 16px; left: 16px; align-items: stretch; }
+      #input-row { flex-wrap: wrap; padding: 6px 8px 6px 14px; border-radius: 28px; }
+      #input-row input { width: 100%; font-size: 14px; padding: 8px 0; }
+      #input-row button { width: 100%; justify-content: center; padding: 8px; }
+      #toast { right: 16px; bottom: 140px; font-size: 12px; white-space: normal; }
+      #memory-badge { right: 16px; bottom: 130px; }
+      #footer span { font-size: 10px; padding: 4px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h1>🌧️ 影子互文 · 雨</h1>
+    <p>显意识 · 高维影子 · 个人记忆库</p>
+  </div>
+  <div id="footer"><span>拖拽旋转 · 滚轮缩放 · 影子碎片随新鲜度呼吸</span></div>
+  <div id="input-panel">
+    <div class="panel-label">✦ 贴一张便利贴到影子层</div>
+    <div id="input-row">
+      <input id="shadowInput" type="text" placeholder='例如 "雨声让我想起外婆"' maxlength="40" />
+      <button id="submitBtn">贴入</button>
+    </div>
+  </div>
+  <div id="memory-badge">📒 个人记忆库 · 0 条待审核</div>
+  <div id="toast"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    const CONFIG = {
+      coreWord: '雨',
+      presetShadows: [
+        { text: '潮湿的心情', initialFreshness: 0.75 },
+        { text: '窗玻璃上的水痕', initialFreshness: 0.60 },
+        { text: '一场没带伞的偶遇', initialFreshness: 0.90 },
+        { text: '雷暴前的压抑', initialFreshness: 0.40 },
+        { text: '雨声像白噪音', initialFreshness: 0.55 },
+        { text: '泥土被唤醒的味道', initialFreshness: 0.80 },
+        { text: '雨停了但云没散', initialFreshness: 0.30 },
+      ],
+      particleCount: 4200,
+      waterLevelY: 0,
+    };
+
+    const memoryBank = [];
+    const shadowFragments = [];
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050b1a);
+    scene.fog = new THREE.FogExp2(0x050b1a, 0.007);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(9, 5, 14);
+    camera.lookAt(0, -1.5, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    document.body.appendChild(renderer.domElement);
+
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.left = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild(labelRenderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.6;
+    controls.maxPolarAngle = Math.PI / 2.1;
+    controls.minDistance = 4;
+    controls.maxDistance = 28;
+    controls.target.set(0, -1.5, 0);
+
+    scene.add(new THREE.AmbientLight(0x4466aa, 0.5));
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    mainLight.position.set(3, 10, 5);
+    scene.add(mainLight);
+    const fill = new THREE.PointLight(0x4488ff, 1.2, 20);
+    fill.position.set(-4, 2, -5);
+    scene.add(fill);
+    const rim = new THREE.PointLight(0x88ccff, 0.8, 18);
+    rim.position.set(5, -1, 6);
+    scene.add(rim);
+
+    const waterGeo = new THREE.CircleGeometry(13, 72);
+    const waterMat = new THREE.MeshPhysicalMaterial({
+      color: 0x1a3a5c,
+      transparent: true,
+      opacity: 0.20,
+      roughness: 0.15,
+      metalness: 0.25,
+      side: THREE.DoubleSide,
+    });
+    const water = new THREE.Mesh(waterGeo, waterMat);
+    water.rotation.x = -Math.PI / 2;
+    water.position.y = CONFIG.waterLevelY;
+    scene.add(water);
+
+    const ringGeo = new THREE.RingGeometry(5.8, 6.8, 72);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x4488ff,
+      transparent: true,
+      opacity: 0.06,
+      side: THREE.DoubleSide,
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = CONFIG.waterLevelY + 0.03;
+    scene.add(ring);
+
+    function makeLabel(text, size = 1, color = '#88ccff', isCore = false) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      div.style.color = color;
+      div.style.fontFamily = '"PingFang SC","Microsoft YaHei",sans-serif';
+      div.style.fontWeight = isCore ? '600' : '300';
+      div.style.fontSize = isCore ? '44px' : `${20 * size}px`;
+      div.style.textShadow = isCore
+        ? '0 0 50px rgba(80,180,255,0.5), 0 0 100px rgba(40,100,255,0.2)'
+        : '0 0 20px rgba(80,160,255,0.2)';
+      div.style.letterSpacing = isCore ? '8px' : '1px';
+      div.style.background = isCore ? 'rgba(10,30,60,0.35)' : 'rgba(0,0,0,0.15)';
+      div.style.backdropFilter = 'blur(4px)';
+      div.style.padding = isCore ? '10px 28px' : '4px 14px';
+      div.style.borderRadius = '40px';
+      div.style.border = isCore ? '1px solid rgba(100,200,255,0.2)' : '1px solid rgba(255,255,255,0.03)';
+      return new CSS2DObject(div);
+    }
+
+    const coreLabel = makeLabel(CONFIG.coreWord, 1.2, '#b0e0ff', true);
+    coreLabel.position.set(0, 3.0, 0);
+    scene.add(coreLabel);
+
+    const surroundWords = ['水', '天空', '眼泪', '泥土', '雷暴', '潮湿', '宁静', '滴落'];
+    const surroundPos = [];
+    surroundWords.forEach((w, i) => {
+      const angle = (i / surroundWords.length) * Math.PI * 2 + 0.3;
+      const r = 4.6 + Math.sin(i * 1.7) * 0.7;
+      const x = Math.cos(angle) * r;
+      const z = Math.sin(angle) * r;
+      const y = 2.0 + Math.cos(i * 2.3) * 0.7;
+      const hue = 0.55 + (i / surroundWords.length) * 0.12;
+      const label = makeLabel(w, 0.7 + Math.sin(i * 1.3) * 0.15, `hsl(${hue*360}, 75%, 70%)`);
+      label.position.set(x, y, z);
+      scene.add(label);
+      surroundPos.push({ x, y, z });
+    });
+
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.10 });
+    surroundPos.forEach(p => {
+      const pts = [
+        new THREE.Vector3(0, 3.0, 0),
+        new THREE.Vector3(p.x * 0.5, (p.y + 3.0) / 2 + 0.4, p.z * 0.5),
+        new THREE.Vector3(p.x, p.y, p.z),
+      ];
+      const curve = new THREE.QuadraticBezierCurve3(pts[0], pts[1], pts[2]);
+      const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(20));
+      scene.add(new THREE.Line(geo, lineMat));
+    });
+
+    const pCount = CONFIG.particleCount;
+    const pos = new Float32Array(pCount * 3);
+    const cols = new Float32Array(pCount * 3);
+    const sizes = new Float32Array(pCount);
+    const life = new Float32Array(pCount);
+    const speed = new Float32Array(pCount);
+    const origin = new Float32Array(pCount * 3);
+
+    for (let i = 0; i < pCount; i++) {
+      const rBase = 2.5 + Math.random() * 5.5;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI * 0.75;
+      const r = rBase * Math.sin(phi);
+      const x = r * Math.cos(theta) * (0.8 + Math.random() * 0.3);
+      const z = r * Math.sin(theta) * (0.8 + Math.random() * 0.3);
+      const y = -1.8 - (Math.random() * 6.0) - (Math.cos(phi) * 1.8);
+      pos[i * 3] = x;
+      pos[i * 3 + 1] = y;
+      pos[i * 3 + 2] = z;
+      origin[i * 3] = x;
+      origin[i * 3 + 1] = y;
+      origin[i * 3 + 2] = z;
+      life[i] = Math.random();
+      speed[i] = 0.002 + Math.random() * 0.008;
+      sizes[i] = 0.06 + Math.random() * 0.28;
+      cols[i * 3] = 0.2;
+      cols[i * 3 + 1] = 0.5;
+      cols[i * 3 + 2] = 0.9;
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    pGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    pGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.3, 'rgba(200,235,255,0.9)');
+    grad.addColorStop(1, 'rgba(100,150,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
+    const texture = new THREE.CanvasTexture(canvas);
+
+    const pMat = new THREE.PointsMaterial({
+      size: 0.3,
+      map: texture,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      transparent: true,
+      opacity: 0.85,
+      vertexColors: true,
+      sizeAttenuation: true,
+    });
+    const particleSystem = new THREE.Points(pGeo, pMat);
+    scene.add(particleSystem);
+
+    const pData = { pos, cols, sizes, life, speed, origin, count: pCount };
+
+    const fragmentObjects = [];
+
+    function createFragmentLabel(text, freshness = 0.7) {
+      const div = document.createElement('div');
+      div.textContent = '✦ ' + text;
+      div.style.color = `rgba(180, 230, 255, ${0.3 + freshness * 0.6})`;
+      div.style.fontSize = `${13 + freshness * 6}px`;
+      div.style.fontWeight = '300';
+      div.style.fontFamily = '"PingFang SC","Microsoft YaHei",sans-serif';
+      div.style.letterSpacing = '1px';
+      div.style.textShadow = `0 0 ${20 + freshness * 30}px rgba(80,200,255,${0.1 + freshness * 0.2})`;
+      div.style.background = `rgba(10, 30, 60, ${0.1 + freshness * 0.2})`;
+      div.style.backdropFilter = 'blur(4px)';
+      div.style.padding = '4px 14px';
+      div.style.borderRadius = '30px';
+      div.style.border = `1px solid rgba(100,200,255,${0.05 + freshness * 0.15})`;
+      div.style.transition = 'all 0.8s ease';
+      return new CSS2DObject(div);
+    }
+
+    CONFIG.presetShadows.forEach((item) => {
+      const frag = {
+        text: item.text,
+        freshness: item.initialFreshness,
+        speed: 0.002 + Math.random() * 0.005,
+        label: null,
+        pos: new THREE.Vector3(
+          (Math.random() - 0.5) * 7,
+          -1.8 - Math.random() * 4.5,
+          (Math.random() - 0.5) * 7
+        ),
+        targetPos: new THREE.Vector3(),
+        age: Math.random() * 100,
+      };
+      const label = createFragmentLabel(frag.text, frag.freshness);
+      label.position.copy(frag.pos);
+      scene.add(label);
+      frag.label = label;
+      fragmentObjects.push(frag);
+      shadowFragments.push(frag);
+    });
+
+    const inputEl = document.getElementById('shadowInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const toastEl = document.getElementById('toast');
+    const badgeEl = document.getElementById('memory-badge');
+
+    let toastTimer = null;
+
+    function showToast(msg, isGood = true) {
+      toastEl.textContent = msg;
+      toastEl.style.color = isGood ? '#8cc4ff' : '#ff9a8a';
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+    function updateBadge() {
+      badgeEl.textContent = `📒 个人记忆库 · ${memoryBank.length} 条待审核`;
+    }
+
+    function handleSubmit() {
+      const raw = inputEl.value.trim();
+      if (!raw) {
+        showToast('✍️ 写一句关于 "雨" 的感受吧', false);
+        return;
+      }
+      if (raw.length > 40) {
+        showToast('📏 精简到 40 字以内吧', false);
+        return;
+      }
+
+      memoryBank.push({
+        text: raw,
+        submittedAt: Date.now(),
+        status: 'pending',
+      });
+
+      inputEl.value = '';
+      updateBadge();
+      showToast(`📒 已存入记忆库 · 等待审核：「${raw}」`, true);
+
+      setTimeout(() => {
+        const last = memoryBank[memoryBank.length - 1];
+        if (last && last.status === 'pending') {
+          const approved = Math.random() > 0.2;
+          if (approved) {
+            last.status = 'approved';
+            const newFrag = {
+              text: last.text,
+              freshness: 1.0,
+              speed: 0.003 + Math.random() * 0.004,
+              label: null,
+              pos: new THREE.Vector3(
+                (Math.random() - 0.5) * 6,
+                -1.2 - Math.random() * 2.5,
+                (Math.random() - 0.5) * 6
+              ),
+              targetPos: new THREE.Vector3(),
+              age: 0,
+            };
+            const label = createFragmentLabel(newFrag.text, 1.0);
+            label.position.copy(newFrag.pos);
+            scene.add(label);
+            newFrag.label = label;
+            fragmentObjects.push(newFrag);
+            shadowFragments.push(newFrag);
+            showToast(`✅ 审核通过 · 「${last.text}」已加入影子层 ✨`, true);
+          } else {
+            last.status = 'rejected';
+            showToast(`⏳ 「${last.text}」暂未通过审核，保留在记忆库`, false);
+          }
+          updateBadge();
+        }
+      }, 2000);
+    }
+
+    submitBtn.addEventListener('click', handleSubmit);
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleSubmit();
+    });
+
+    renderer.domElement.addEventListener('pointerdown', () => {
+      controls.autoRotate = false;
+      setTimeout(() => { controls.autoRotate = true; }, 5000);
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const delta = clock.getDelta();
+      const elapsed = performance.now() * 0.001;
+
+      const { pos, cols, life, speed, origin, count } = pData;
+      const pulse = Math.sin(elapsed * 0.12) * 0.4 + 0.6;
+      for (let i = 0; i < count; i++) {
+        life[i] -= speed[i] * delta * 1.8;
+        if (life[i] <= 0) {
+          life[i] = 1.0;
+          const idx = i * 3;
+          const rBase = 2.5 + Math.random() * 5.5;
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.random() * Math.PI * 0.75;
+          const r = rBase * Math.sin(phi);
+          origin[idx] = r * Math.cos(theta) * (0.8 + Math.random() * 0.3);
+          origin[idx + 1] = -1.8 - (Math.random() * 6.0) - (Math.cos(phi) * 1.8);
+          origin[idx + 2] = r * Math.sin(theta) * (0.8 + Math.random() * 0.3);
+        }
+        const l = life[i];
+        const r = 0.10 + l * 0.40;
+        const g = 0.15 + l * 0.75;
+        const b = 0.25 + l * 0.75;
+        const pf = 1.0 + l * 0.25 * pulse;
+        cols[i * 3] = Math.min(r * pf, 1.0);
+        cols[i * 3 + 1] = Math.min(g * pf, 1.0);
+        cols[i * 3 + 2] = Math.min(b * pf, 1.0);
+
+        const floatAmp = l * 0.25;
+        const decaySink = (1 - l) * 0.6;
+        pos[i * 3] = origin[i * 3] + Math.sin(elapsed * 0.5 + i * 0.005) * 0.1 * l;
+        pos[i * 3 + 1] = origin[i * 3 + 1] + Math.sin(elapsed * 0.6 + i * 0.007) * floatAmp - decaySink;
+        pos[i * 3 + 2] = origin[i * 3 + 2] + Math.cos(elapsed * 0.5 + i * 0.005) * 0.1 * l;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+      pGeo.attributes.color.needsUpdate = true;
+
+      fragmentObjects.forEach((frag) => {
+        frag.freshness -= frag.speed * delta * 1.2;
+        if (frag.freshness < 0) frag.freshness = 0;
+        if (frag.freshness > 1) frag.freshness = 1;
+
+        const el = frag.label.element;
+        const f = frag.freshness;
+        el.style.color = `rgba(180, 230, 255, ${0.15 + f * 0.65})`;
+        el.style.fontSize = `${12 + f * 7}px`;
+        el.style.textShadow = `0 0 ${15 + f * 35}px rgba(80,200,255,${0.05 + f * 0.25})`;
+        el.style.background = `rgba(10, 30, 60, ${0.05 + f * 0.25})`;
+        el.style.borderColor = `rgba(100,200,255,${0.02 + f * 0.18})`;
+
+        frag.age += delta;
+        const floatY = Math.sin(frag.age * 0.4 + frag.pos.x) * (0.08 + f * 0.15);
+        const floatX = Math.cos(frag.age * 0.3 + frag.pos.z) * (0.04 + f * 0.08);
+        const sink = (1 - f) * 0.5;
+        frag.label.position.x = frag.pos.x + floatX;
+        frag.label.position.y = frag.pos.y + floatY - sink;
+        frag.label.position.z = frag.pos.z + Math.sin(frag.age * 0.35 + frag.pos.x) * (0.04 + f * 0.08);
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+      labelRenderer.setSize(w, h);
+    });
+
+    console.log('🌧️ 影子互文 · 雨 · 高维影子已加载');
+  </script>
+</body>
+</html>
