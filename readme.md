@@ -2,7 +2,7 @@
 
 > 给AI一个可以随时换衣服、贴备忘、继承经验的壳，让它每次学新东西的时候，不用再改自己。
 
-[🌐 在线体验](https://你的用户名.github.io/shadow-intertext)
+[🌐 在线体验]( https://sisicat77.github.io/shadow-intertext/)
 
 ---
 
