@@ -1,626 +1,755 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>影子互文 · 雨 · 高维影子</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      background: #050b1a;
-      overflow: hidden;
-      font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
-      color: #fff;
-      user-select: none;
-    }
-    #header {
-      position: absolute;
-      top: 24px;
-      left: 28px;
-      z-index: 20;
-      pointer-events: none;
-    }
-    #header h1 {
-      font-size: 22px;
-      font-weight: 300;
-      letter-spacing: 6px;
-      color: rgba(200, 230, 255, 0.95);
-      text-shadow: 0 0 30px rgba(0, 100, 200, 0.25);
-    }
-    #header p {
-      font-size: 12px;
-      opacity: 0.45;
-      letter-spacing: 3px;
-      color: #8ab4ff;
-      margin-top: 4px;
-    }
-    #footer {
-      position: absolute;
-      bottom: 28px;
-      left: 0;
-      width: 100%;
-      text-align: center;
-      z-index: 10;
-      pointer-events: none;
-    }
-    #footer span {
-      background: rgba(10, 20, 40, 0.5);
-      backdrop-filter: blur(6px);
-      padding: 6px 22px;
-      border-radius: 40px;
-      border: 1px solid rgba(100, 180, 255, 0.10);
-      font-size: 12px;
-      letter-spacing: 2px;
-      color: rgba(180, 210, 255, 0.5);
-    }
-    #input-panel {
-      position: absolute;
-      bottom: 100px;
-      right: 30px;
-      z-index: 30;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 10px;
-      pointer-events: none;
-    }
-    #input-panel * {
-      pointer-events: auto;
-    }
-    #input-panel .panel-label {
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: rgba(150, 200, 255, 0.4);
-      background: rgba(0, 10, 30, 0.6);
-      padding: 4px 14px;
-      border-radius: 20px;
-      border: 1px solid rgba(100, 180, 255, 0.08);
-      backdrop-filter: blur(4px);
-    }
-    #input-row {
-      display: flex;
-      gap: 10px;
-      background: rgba(8, 20, 45, 0.7);
-      backdrop-filter: blur(12px);
-      padding: 8px 10px 8px 18px;
-      border-radius: 48px;
-      border: 1px solid rgba(100, 180, 255, 0.15);
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
-      transition: border-color 0.3s;
-    }
-    #input-row:focus-within {
-      border-color: rgba(100, 200, 255, 0.4);
-    }
-    #input-row input {
-      background: transparent;
-      border: none;
-      outline: none;
-      color: #c8e0ff;
-      font-size: 15px;
-      font-family: inherit;
-      width: 200px;
-      padding: 6px 0;
-      letter-spacing: 0.5px;
-    }
-    #input-row input::placeholder {
-      color: rgba(150, 190, 255, 0.25);
-      font-weight: 300;
-      font-size: 13px;
-    }
-    #input-row button {
-      background: linear-gradient(135deg, rgba(60, 160, 255, 0.25), rgba(40, 100, 255, 0.15));
-      border: 1px solid rgba(100, 180, 255, 0.2);
-      color: #aac8ff;
-      padding: 6px 20px;
-      border-radius: 40px;
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 2px;
-      cursor: pointer;
-      transition: all 0.25s;
-      font-family: inherit;
-      backdrop-filter: blur(4px);
-    }
-    #input-row button:hover {
-      background: linear-gradient(135deg, rgba(60, 160, 255, 0.4), rgba(40, 100, 255, 0.25));
-      border-color: rgba(100, 200, 255, 0.4);
-      color: #d6ecff;
-      box-shadow: 0 0 30px rgba(60, 160, 255, 0.15);
-    }
-    #input-row button:active {
-      transform: scale(0.96);
-    }
-    #toast {
-      position: absolute;
-      bottom: 180px;
-      right: 30px;
-      z-index: 35;
-      background: rgba(8, 25, 55, 0.85);
-      backdrop-filter: blur(8px);
-      padding: 10px 22px;
-      border-radius: 30px;
-      border: 1px solid rgba(100, 200, 255, 0.15);
-      font-size: 13px;
-      color: #8cc4ff;
-      letter-spacing: 1px;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    #toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    #memory-badge {
-      position: absolute;
-      bottom: 170px;
-      right: 30px;
-      z-index: 25;
-      font-size: 11px;
-      color: rgba(150, 200, 255, 0.3);
-      background: rgba(0, 10, 30, 0.4);
-      padding: 4px 14px;
-      border-radius: 20px;
-      border: 1px solid rgba(100, 180, 255, 0.06);
-      pointer-events: none;
-      letter-spacing: 1px;
-      backdrop-filter: blur(2px);
-    }
-    @media (max-width: 640px) {
-      #header h1 { font-size: 17px; letter-spacing: 4px; }
-      #header { top: 16px; left: 18px; }
-      #input-panel { bottom: 70px; right: 16px; left: 16px; align-items: stretch; }
-      #input-row { flex-wrap: wrap; padding: 6px 8px 6px 14px; border-radius: 28px; }
-      #input-row input { width: 100%; font-size: 14px; padding: 8px 0; }
-      #input-row button { width: 100%; justify-content: center; padding: 8px; }
-      #toast { right: 16px; bottom: 140px; font-size: 12px; white-space: normal; }
-      #memory-badge { right: 16px; bottom: 130px; }
-      #footer span { font-size: 10px; padding: 4px 14px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>影子互文 · 云的三重冰山</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { overflow:hidden; background:#0a0e1a; font-family:'Inter','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; color:#fff; -webkit-font-smoothing:antialiased; }
+canvas { display:block; }
+
+#ui-overlay {
+  position:fixed; bottom:0; left:0; right:0;
+  padding:24px 36px 32px;
+  background:linear-gradient(transparent 10%, rgba(10,14,26,0.92) 50%);
+  pointer-events:none; z-index:10;
+}
+#ui-overlay > * { pointer-events:auto; }
+
+#presets {
+  display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:14px;
+}
+.preset-btn {
+  padding:8px 20px; border-radius:24px; border:1px solid rgba(255,255,255,0.1);
+  background:linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  color:rgba(255,255,255,0.55);
+  font-size:13px; cursor:pointer; transition:all 0.3s ease;
+  backdrop-filter:blur(8px); letter-spacing:0.3px;
+}
+.preset-btn:hover {
+  background:linear-gradient(135deg, rgba(133,193,233,0.12), rgba(133,193,233,0.04));
+  border-color:rgba(133,193,233,0.25); color:rgba(255,255,255,0.85);
+  transform:translateY(-1px);
+}
+.preset-btn.active {
+  background:linear-gradient(135deg, rgba(133,193,233,0.18), rgba(133,193,233,0.06));
+  border-color:rgba(133,193,233,0.45); color:#85c1e9;
+  box-shadow:0 0 20px rgba(133,193,233,0.08);
+}
+
+#input-row {
+  display:flex; gap:10px; max-width:640px; margin:0 auto; align-items:center;
+}
+#shadow-input {
+  flex:1; padding:14px 20px; border-radius:14px; border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.03); color:#fff;
+  font-size:15px; outline:none; transition:all 0.3s;
+  backdrop-filter:blur(8px);
+}
+#shadow-input::placeholder { color:rgba(255,255,255,0.18); }
+#shadow-input:focus {
+  border-color:rgba(133,193,233,0.4);
+  background:rgba(255,255,255,0.05);
+  box-shadow:0 0 30px rgba(133,193,233,0.05), inset 0 0 20px rgba(133,193,233,0.02);
+}
+#shadow-input.pulse {
+  border-color:#85c1e9;
+  box-shadow:0 0 25px rgba(133,193,233,0.15), 0 0 50px rgba(133,193,233,0.05);
+}
+
+#send-btn {
+  padding:14px 28px; border-radius:14px; border:none;
+  background:linear-gradient(135deg, rgba(133,193,233,0.15), rgba(133,193,233,0.06));
+  color:#85c1e9; font-size:15px; cursor:pointer;
+  transition:all 0.3s; backdrop-filter:blur(8px);
+  font-weight:500; letter-spacing:1px;
+}
+#send-btn:hover {
+  background:linear-gradient(135deg, rgba(133,193,233,0.25), rgba(133,193,233,0.1));
+  transform:translateX(2px);
+  box-shadow:0 0 20px rgba(133,193,233,0.08);
+}
+
+#status-bar {
+  position:fixed; top:22px; left:50%; transform:translateX(-50%);
+  z-index:10; display:flex; gap:8px; align-items:center;
+  padding:10px 22px; border-radius:24px;
+  background:linear-gradient(135deg, rgba(10,14,26,0.6), rgba(10,14,26,0.4));
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.04);
+  font-size:13px; color:rgba(255,255,255,0.4);
+  transition:all 0.6s ease; opacity:1;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+}
+#status-bar.active {
+  border-color:rgba(133,193,233,0.2);
+  color:#85c1e9;
+  box-shadow:0 4px 30px rgba(133,193,233,0.06);
+}
+#status-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:rgba(255,255,255,0.12); transition:all 0.5s;
+}
+#status-bar.active #status-dot {
+  background:#85c1e9;
+  box-shadow:0 0 12px rgba(133,193,233,0.5);
+}
+#status-text { white-space:nowrap; }
+
+#response-box {
+  position:fixed; bottom:140px; left:50%; transform:translateX(-50%) translateY(10px);
+  z-index:10; opacity:0; transition:all 0.8s cubic-bezier(0.16,1,0.3,1);
+  max-width:600px; width:90%; text-align:center;
+  pointer-events:none;
+}
+#response-box.show {
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+#response-text {
+  display:inline-block; padding:18px 28px;
+  border-radius:18px;
+  background:linear-gradient(135deg, rgba(10,14,26,0.75), rgba(10,14,26,0.55));
+  backdrop-filter:blur(16px);
+  border:1px solid rgba(133,193,233,0.12);
+  font-size:14px; line-height:1.8; color:rgba(255,255,255,0.8);
+  box-shadow:0 8px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+#phase-indicator {
+  position:fixed; right:28px; top:50%; transform:translateY(-50%);
+  z-index:10; display:flex; flex-direction:column; gap:16px; align-items:flex-end;
+}
+.phase-item {
+  display:flex; align-items:center; gap:12px;
+  font-size:12px; color:rgba(255,255,255,0.14); transition:all 0.6s ease;
+}
+.phase-item .phase-circle {
+  width:10px; height:10px; border-radius:50%;
+  border:1.5px solid rgba(255,255,255,0.06); transition:all 0.5s ease;
+  flex-shrink:0;
+}
+.phase-item.active .phase-circle {
+  background:#85c1e9; border-color:#85c1e9;
+  box-shadow:0 0 16px rgba(133,193,233,0.45), 0 0 30px rgba(133,193,233,0.15);
+  transform:scale(1.15);
+}
+.phase-item.active { color:rgba(255,255,255,0.8); }
+.phase-item.done .phase-circle {
+  background:rgba(133,193,233,0.25); border-color:rgba(133,193,233,0.15);
+  transform:scale(0.9);
+}
+.phase-item.done { color:rgba(255,255,255,0.25); }
+
+#legend {
+  position:fixed; left:28px; bottom:128px; z-index:10;
+  display:flex; flex-direction:column; gap:8px;
+  font-size:11px; color:rgba(255,255,255,0.16);
+  pointer-events:none;
+}
+.legend-row { display:flex; align-items:center; gap:10px; }
+.legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.legend-label { opacity:0.7; }
+
+@media (max-width:640px) {
+  #phase-indicator { display:none; }
+  #presets { gap:4px; }
+  .preset-btn { font-size:11px; padding:6px 12px; }
+  #ui-overlay { padding:14px 16px 20px; }
+  #response-box { bottom:115px; }
+  #legend { display:none; }
+}
+</style>
 </head>
 <body>
-  <div id="header">
-    <h1>🌧️ 影子互文 · 雨</h1>
-    <p>显意识 · 高维影子 · 个人记忆库</p>
+
+<div id="status-bar">
+  <span id="status-dot"></span>
+  <span id="status-text">待机 · 冰山未照亮</span>
+</div>
+
+<div id="phase-indicator">
+  <div class="phase-item" data-phase="input"><span class="phase-circle"></span>输入</div>
+  <div class="phase-item" data-phase="body"><span class="phase-circle"></span>本体亮起</div>
+  <div class="phase-item" data-phase="wire"><span class="phase-circle"></span>沿线下行</div>
+  <div class="phase-item" data-phase="shadow"><span class="phase-circle"></span>冰山浮现</div>
+  <div class="phase-item" data-phase="read"><span class="phase-circle"></span>扫描回传</div>
+  <div class="phase-item" data-phase="respond"><span class="phase-circle"></span>生成回应</div>
+</div>
+
+<div id="legend">
+  <div class="legend-row"><span class="legend-dot" style="background:#f5efe0;box-shadow:0 0 6px rgba(245,239,224,0.3)"></span><span class="legend-label">本体 · "云"字</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#85c1e9;box-shadow:0 0 6px rgba(133,193,233,0.3)"></span><span class="legend-label">自然层 · 天上的云</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#5dade2;box-shadow:0 0 6px rgba(93,173,226,0.3)"></span><span class="legend-label">科技层 · 计算的云</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#af7ac5;box-shadow:0 0 6px rgba(175,122,197,0.3)"></span><span class="legend-label">文艺层 · 诗中的云</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:rgba(133,193,233,0.35);height:2px;width:12px;border-radius:1px"></span><span class="legend-label">线 · 本体与影子的连接</span></div>
+</div>
+
+<div id="response-box">
+  <div id="response-text"></div>
+</div>
+
+<div id="ui-overlay">
+  <div id="presets">
+    <button class="preset-btn" data-text="今天天上的云好低">☁️ 天上的云</button>
+    <button class="preset-btn" data-text="公司的云服务又崩了">⚙️ 云服务</button>
+    <button class="preset-btn" data-text="行到水穷处坐看云起时">📜 诗中的云</button>
+    <button class="preset-btn" data-text="这朵云像一只兔子">🐰 像兔子的云</button>
+    <button class="preset-btn" data-text="云到底是什么呢">❓ 云是什么</button>
   </div>
-  <div id="footer"><span>拖拽旋转 · 滚轮缩放 · 影子碎片随新鲜度呼吸</span></div>
-  <div id="input-panel">
-    <div class="panel-label">✦ 贴一张便利贴到影子层</div>
-    <div id="input-row">
-      <input id="shadowInput" type="text" placeholder='例如 "雨声让我想起外婆"' maxlength="40" />
-      <button id="submitBtn">贴入</button>
-    </div>
+  <div id="input-row">
+    <input id="shadow-input" type="text" placeholder="输入包含「云」的句子..." autocomplete="off">
+    <button id="send-btn">→ 发送</button>
   </div>
-  <div id="memory-badge">📒 个人记忆库 · 0 条待审核</div>
-  <div id="toast"></div>
+</div>
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-    const CONFIG = {
-      coreWord: '雨',
-      presetShadows: [
-        { text: '潮湿的心情', initialFreshness: 0.75 },
-        { text: '窗玻璃上的水痕', initialFreshness: 0.60 },
-        { text: '一场没带伞的偶遇', initialFreshness: 0.90 },
-        { text: '雷暴前的压抑', initialFreshness: 0.40 },
-        { text: '雨声像白噪音', initialFreshness: 0.55 },
-        { text: '泥土被唤醒的味道', initialFreshness: 0.80 },
-        { text: '雨停了但云没散', initialFreshness: 0.30 },
-      ],
-      particleCount: 4200,
-      waterLevelY: 0,
-    };
+// ── Scene ──
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a1a);
 
-    const memoryBank = [];
-    const shadowFragments = [];
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(7, 4, 9);
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050b1a);
-    scene.fog = new THREE.FogExp2(0x050b1a, 0.007);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+document.body.prepend(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(9, 5, 14);
-    camera.lookAt(0, -1.5, 0);
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'fixed';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.left = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+labelRenderer.domElement.style.zIndex = '2';
+document.body.prepend(labelRenderer.domElement);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
-    document.body.appendChild(renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.2, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 3.5;
+controls.maxDistance = 16;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
 
-    const labelRenderer = new CSS2DRenderer();
-    labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    labelRenderer.domElement.style.position = 'absolute';
-    labelRenderer.domElement.style.top = '0';
-    labelRenderer.domElement.style.left = '0';
-    labelRenderer.domElement.style.pointerEvents = 'none';
-    document.body.appendChild(labelRenderer.domElement);
+// ── Lights ──
+scene.add(new THREE.AmbientLight(0x222244, 0.5));
+const dl = new THREE.DirectionalLight(0xffffff, 1.0);
+dl.position.set(5, 10, 7);
+scene.add(dl);
+const rl = new THREE.DirectionalLight(0x4488ff, 0.3);
+rl.position.set(-3, -2, -5);
+scene.add(rl);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.06;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.6;
-    controls.maxPolarAngle = Math.PI / 2.1;
-    controls.minDistance = 4;
-    controls.maxDistance = 28;
-    controls.target.set(0, -1.5, 0);
+// ── Stars ──
+const starGeo = new THREE.BufferGeometry();
+const sCount = 500;
+const sPos = new Float32Array(sCount * 3);
+for (let i = 0; i < sCount * 3; i++) sPos[i] = (Math.random() - 0.5) * 80;
+starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+  color: 0x666688, size: 0.035, transparent: true, opacity: 0.5,
+}));
+scene.add(stars);
 
-    scene.add(new THREE.AmbientLight(0x4466aa, 0.5));
-    const mainLight = new THREE.DirectionalLight(0xffffff, 2.2);
-    mainLight.position.set(3, 10, 5);
-    scene.add(mainLight);
-    const fill = new THREE.PointLight(0x4488ff, 1.2, 20);
-    fill.position.set(-4, 2, -5);
-    scene.add(fill);
-    const rim = new THREE.PointLight(0x88ccff, 0.8, 18);
-    rim.position.set(5, -1, 6);
-    scene.add(rim);
+// ── Config ──
+const BODY_POS = new THREE.Vector3(0, 3.0, 0);
+const CLUSTERS = [
+  { label: '自然层 · 天上的云', center: new THREE.Vector3(-2.5, 0.3, 2.0), color: new THREE.Color(0x85c1e9), count: 70, radius: 1.0, material: '易腐' },
+  { label: '科技层 · 计算的云', center: new THREE.Vector3(2.8, 0.5, -1.8), color: new THREE.Color(0x5dade2), count: 70, radius: 0.9, material: '钢铁' },
+  { label: '文艺层 · 诗中的云', center: new THREE.Vector3(0.0, -0.5, 3.2), color: new THREE.Color(0xaf7ac5), count: 50, radius: 0.8, material: '不定形' },
+];
 
-    const waterGeo = new THREE.CircleGeometry(13, 72);
-    const waterMat = new THREE.MeshPhysicalMaterial({
-      color: 0x1a3a5c,
-      transparent: true,
-      opacity: 0.20,
-      roughness: 0.15,
-      metalness: 0.25,
-      side: THREE.DoubleSide,
+// ── Body ──
+const bodyGroup = new THREE.Group();
+bodyGroup.position.copy(BODY_POS);
+
+const coreMat = new THREE.MeshStandardMaterial({
+  color: 0xf5efe0, emissive: 0xc8c0b0, emissiveIntensity: 0.3, metalness: 0.05, roughness: 0.25,
+});
+const core = new THREE.Mesh(new THREE.SphereGeometry(0.3, 32, 32), coreMat);
+bodyGroup.add(core);
+
+const glowMat = new THREE.MeshBasicMaterial({
+  color: 0xf5efe0, transparent: true, opacity: 0.06,
+});
+const glow = new THREE.Mesh(new THREE.SphereGeometry(0.65, 32, 32), glowMat);
+bodyGroup.add(glow);
+
+const ringMat = new THREE.MeshBasicMaterial({
+  color: 0xf5efe0, transparent: true, opacity: 0.05, side: THREE.DoubleSide,
+});
+const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.85, 48), ringMat);
+ring.rotation.x = Math.PI / 2;
+bodyGroup.add(ring);
+
+// Body orbiting particles
+const bpCount = 30;
+const bpPos = new Float32Array(bpCount * 3);
+const bpOff = [];
+for (let i = 0; i < bpCount; i++) {
+  const t = Math.random() * Math.PI * 2;
+  const p = Math.acos(2 * Math.random() - 1);
+  const r = 0.45 + Math.random() * 0.35;
+  bpPos[i*3] = r * Math.sin(p) * Math.cos(t);
+  bpPos[i*3+1] = r * Math.cos(p);
+  bpPos[i*3+2] = r * Math.sin(p) * Math.sin(t);
+  bpOff.push(t, p, r);
+}
+const bpGeo = new THREE.BufferGeometry();
+bpGeo.setAttribute('position', new THREE.BufferAttribute(bpPos, 3));
+const bpMat = new THREE.PointsMaterial({ color: 0xf5efe0, size: 0.02, transparent: true, opacity: 0.25 });
+const bpMesh = new THREE.Points(bpGeo, bpMat);
+bodyGroup.add(bpMesh);
+
+// Label
+const lbl = document.createElement('div');
+lbl.textContent = '云';
+lbl.style.cssText = 'color:#f5efe0;font-size:32px;font-weight:700;text-shadow:0 0 30px rgba(245,239,224,0.4);font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;letter-spacing:2px;';
+const lblObj = new CSS2DObject(lbl);
+lblObj.position.set(0, 0.05, 0);
+bodyGroup.add(lblObj);
+scene.add(bodyGroup);
+
+// ── Shadow ──
+const shadowGroup = new THREE.Group();
+scene.add(shadowGroup);
+
+const particleSystems = [];
+const clusterGroups = [];
+
+CLUSTERS.forEach((cl, ci) => {
+  const pos = new Float32Array(cl.count * 3);
+  const col = new Float32Array(cl.count * 3);
+  const data = [];
+
+  for (let i = 0; i < cl.count; i++) {
+    const t = Math.random() * Math.PI * 2;
+    const p = Math.acos(2 * Math.random() - 1);
+    const r = cl.radius * Math.cbrt(Math.random());
+    const x = cl.center.x + r * Math.sin(p) * Math.cos(t);
+    const y = cl.center.y + r * Math.cos(p);
+    const z = cl.center.z + r * Math.sin(p) * Math.sin(t);
+    pos[i*3] = x; pos[i*3+1] = y; pos[i*3+2] = z;
+
+    const c = cl.color.clone().lerp(new THREE.Color(0xffffff), Math.random() * 0.25);
+    col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+
+    data.push({
+      basePos: new THREE.Vector3(x, y, z),
+      drift: new THREE.Vector3((Math.random()-0.5)*0.01, (Math.random()-0.5)*0.01, (Math.random()-0.5)*0.01),
+      phase: Math.random() * Math.PI * 2,
     });
-    const water = new THREE.Mesh(waterGeo, waterMat);
-    water.rotation.x = -Math.PI / 2;
-    water.position.y = CONFIG.waterLevelY;
-    scene.add(water);
+  }
 
-    const ringGeo = new THREE.RingGeometry(5.8, 6.8, 72);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x4488ff,
-      transparent: true,
-      opacity: 0.06,
-      side: THREE.DoubleSide,
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.y = CONFIG.waterLevelY + 0.03;
-    scene.add(ring);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.06, vertexColors: true, transparent: true, opacity: 0.12,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
+  });
+  const pts = new THREE.Points(geo, mat);
+  shadowGroup.add(pts);
+  particleSystems.push(pts);
+  clusterGroups.push(data);
 
-    function makeLabel(text, size = 1, color = '#88ccff', isCore = false) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      div.style.color = color;
-      div.style.fontFamily = '"PingFang SC","Microsoft YaHei",sans-serif';
-      div.style.fontWeight = isCore ? '600' : '300';
-      div.style.fontSize = isCore ? '44px' : `${20 * size}px`;
-      div.style.textShadow = isCore
-        ? '0 0 50px rgba(80,180,255,0.5), 0 0 100px rgba(40,100,255,0.2)'
-        : '0 0 20px rgba(80,160,255,0.2)';
-      div.style.letterSpacing = isCore ? '8px' : '1px';
-      div.style.background = isCore ? 'rgba(10,30,60,0.35)' : 'rgba(0,0,0,0.15)';
-      div.style.backdropFilter = 'blur(4px)';
-      div.style.padding = isCore ? '10px 28px' : '4px 14px';
-      div.style.borderRadius = '40px';
-      div.style.border = isCore ? '1px solid rgba(100,200,255,0.2)' : '1px solid rgba(255,255,255,0.03)';
-      return new CSS2DObject(div);
-    }
+  // Cluster label
+  const clDiv = document.createElement('div');
+  clDiv.textContent = cl.label;
+  clDiv.style.cssText = `color:rgba(${cl.color.r*255|0},${cl.color.g*255|0},${cl.color.b*255|0},0.25);font-size:11px;font-weight:500;letter-spacing:0.5px;font-family:"PingFang SC","Microsoft YaHei",sans-serif;transition:opacity 0.5s;`;
+  const clLbl = new CSS2DObject(clDiv);
+  clLbl.position.copy(cl.center);
+  clLbl.position.y -= 1.1;
+  shadowGroup.add(clLbl);
+});
 
-    const coreLabel = makeLabel(CONFIG.coreWord, 1.2, '#b0e0ff', true);
-    coreLabel.position.set(0, 3.0, 0);
-    scene.add(coreLabel);
+// ── Wires ──
+const wires = [];
+const energyParticles = [];
 
-    const surroundWords = ['水', '天空', '眼泪', '泥土', '雷暴', '潮湿', '宁静', '滴落'];
-    const surroundPos = [];
-    surroundWords.forEach((w, i) => {
-      const angle = (i / surroundWords.length) * Math.PI * 2 + 0.3;
-      const r = 4.6 + Math.sin(i * 1.7) * 0.7;
-      const x = Math.cos(angle) * r;
-      const z = Math.sin(angle) * r;
-      const y = 2.0 + Math.cos(i * 2.3) * 0.7;
-      const hue = 0.55 + (i / surroundWords.length) * 0.12;
-      const label = makeLabel(w, 0.7 + Math.sin(i * 1.3) * 0.15, `hsl(${hue*360}, 75%, 70%)`);
-      label.position.set(x, y, z);
-      scene.add(label);
-      surroundPos.push({ x, y, z });
-    });
+CLUSTERS.forEach((cl, ci) => {
+  const mid = new THREE.Vector3().addVectors(BODY_POS, cl.center).multiplyScalar(0.5);
+  mid.x += (Math.random() - 0.5) * 1.8;
+  mid.y += (Math.random() - 0.5) * 0.6;
+  mid.z += (Math.random() - 0.5) * 1.8;
 
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.10 });
-    surroundPos.forEach(p => {
-      const pts = [
-        new THREE.Vector3(0, 3.0, 0),
-        new THREE.Vector3(p.x * 0.5, (p.y + 3.0) / 2 + 0.4, p.z * 0.5),
-        new THREE.Vector3(p.x, p.y, p.z),
-      ];
-      const curve = new THREE.QuadraticBezierCurve3(pts[0], pts[1], pts[2]);
-      const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(20));
-      scene.add(new THREE.Line(geo, lineMat));
-    });
+  const curve = new THREE.CatmullRomCurve3([BODY_POS, mid, cl.center]);
 
-    const pCount = CONFIG.particleCount;
-    const pos = new Float32Array(pCount * 3);
-    const cols = new Float32Array(pCount * 3);
-    const sizes = new Float32Array(pCount);
-    const life = new Float32Array(pCount);
-    const speed = new Float32Array(pCount);
-    const origin = new Float32Array(pCount * 3);
+  const tubeMat = new THREE.MeshBasicMaterial({
+    color: 0x85c1e9, transparent: true, opacity: 0.06,
+  });
+  const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.03, 6, false), tubeMat);
+  scene.add(tube);
 
-    for (let i = 0; i < pCount; i++) {
-      const rBase = 2.5 + Math.random() * 5.5;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI * 0.75;
-      const r = rBase * Math.sin(phi);
-      const x = r * Math.cos(theta) * (0.8 + Math.random() * 0.3);
-      const z = r * Math.sin(theta) * (0.8 + Math.random() * 0.3);
-      const y = -1.8 - (Math.random() * 6.0) - (Math.cos(phi) * 1.8);
-      pos[i * 3] = x;
-      pos[i * 3 + 1] = y;
-      pos[i * 3 + 2] = z;
-      origin[i * 3] = x;
-      origin[i * 3 + 1] = y;
-      origin[i * 3 + 2] = z;
-      life[i] = Math.random();
-      speed[i] = 0.002 + Math.random() * 0.008;
-      sizes[i] = 0.06 + Math.random() * 0.28;
-      cols[i * 3] = 0.2;
-      cols[i * 3 + 1] = 0.5;
-      cols[i * 3 + 2] = 0.9;
-    }
+  const glowMat2 = new THREE.MeshBasicMaterial({
+    color: 0x85c1e9, transparent: true, opacity: 0.015,
+  });
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.07, 6, false), glowMat2));
+  wires.push({ mesh: tube, mat: tubeMat, curve, clusterIdx: ci });
 
-    const pGeo = new THREE.BufferGeometry();
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    pGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-    pGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  // Secondary wires
+  const gd = clusterGroups[ci];
+  const step = Math.max(1, Math.floor(gd.length / 7));
+  for (let pi = 0; pi < gd.length; pi += step) {
+    const p = gd[pi];
+    const t = 0.2 + Math.random() * 0.6;
+    const wp = curve.getPoint(t);
+    const sc = new THREE.CatmullRomCurve3([wp, new THREE.Vector3().lerpVectors(wp, p.basePos, 0.5), p.basePos]);
+    const sm = new THREE.MeshBasicMaterial({ color: 0x85c1e9, transparent: true, opacity: 0.02 });
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(sc, 10, 0.01, 4, false), sm));
+  }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(255,255,255,1)');
-    grad.addColorStop(0.3, 'rgba(200,235,255,0.9)');
-    grad.addColorStop(1, 'rgba(100,150,255,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 64, 64);
-    const texture = new THREE.CanvasTexture(canvas);
+  // Energy particle
+  const eMat = new THREE.MeshBasicMaterial({ color: 0x85c1e9, transparent: true, opacity: 0 });
+  const eMesh = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), eMat);
+  scene.add(eMesh);
+  energyParticles.push({ mesh: eMesh, mat: eMat, curve, speed: 0.3 + Math.random() * 0.2, t: Math.random() });
+});
 
-    const pMat = new THREE.PointsMaterial({
-      size: 0.3,
-      map: texture,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      transparent: true,
-      opacity: 0.85,
-      vertexColors: true,
-      sizeAttenuation: true,
-    });
-    const particleSystem = new THREE.Points(pGeo, pMat);
-    scene.add(particleSystem);
+// ── Context Detection ──
+const PHASES = { IDLE:'idle', INPUT:'input', BODY_LIT:'body', WIRE_DOWN:'wire', SHADOW_LIT:'shadow', READING:'read', RESPOND:'respond' };
+let phase = PHASES.IDLE;
+let phaseTime = 0;
+const DUR = { [PHASES.INPUT]:0.6, [PHASES.BODY_LIT]:1.0, [PHASES.WIRE_DOWN]:1.5, [PHASES.SHADOW_LIT]:2.0, [PHASES.READING]:1.8, [PHASES.RESPOND]:1.0 };
+let context = null;
+let responseText = '';
 
-    const pData = { pos, cols, sizes, life, speed, origin, count: pCount };
+const RESPONSES = {
+  nature: [
+    '自然层亮了。云层很低，水汽逼近地面——冰山顶部是气象知识，往下渗着童年的下午。直觉通道打开，无需推理。',
+    '「天上的云」经验占主导。影子里柔软的白蓝色层最先浮现。材质易腐，但此刻新鲜。',
+  ],
+  tech: [
+    '科技层激活。钢铁材质的经验纹理——服务器的嗡鸣、Dashboard上的绿色数字、运维群里的消息。直觉通道，不举旗。',
+    '「计算的云」亮了。冰山右翼的青色层升温。钢材质，冷而持久，指向明确。',
+  ],
+  art: [
+    '文艺层浮动。王维的诗意渗入冰山——水墨质感的经验，不确定形，但也没有打架。顺着走。',
+    '「诗中的云」在影子里舒卷。不定形材质，淡紫色，没有冲突，适合直觉通行。',
+  ],
+  mixed_nature_tech: [
+    '影子在轻轻打架。自然层在左，科技层在右。没有激烈冲突，但也不是一边倒。举旗——系统暂停直觉，问一句再走。',
+    '两股经验势均力敌。「低」偏向天气，「云」本身携带科技记忆。举旗：唤起深层推理，等待更多上下文。',
+  ],
+  mixed_all: [
+    '三层同时闪烁。自然、科技、文艺各执一词。这不是错误——是冰山在告诉你：这个词很厚。举旗，进入分析通道。',
+    '强烈的打架信号。三股经验各有道理。AI知道自己不知道——停下来，审视各层权重，再决定回应策略。',
+  ],
+};
 
-    const fragmentObjects = [];
+function detectContext(text) {
+  const t = text;
+  const natureWords = ['天上','低','高','飘','朵','像','兔','天气','雨','晴','蓝天','白'];
+  const techWords = ['服务','崩','服务器','计算','存储','公司','运维','数据','部署','上云','迁移'];
+  const artWords = ['诗','坐','起','处','行到','水穷','意境','墨','画','吟','文学','古'];
+  let n = 0, te = 0, a = 0;
+  natureWords.forEach(w => { if (t.includes(w)) n++; });
+  techWords.forEach(w => { if (t.includes(w)) te++; });
+  artWords.forEach(w => { if (t.includes(w)) a++; });
 
-    function createFragmentLabel(text, freshness = 0.7) {
-      const div = document.createElement('div');
-      div.textContent = '✦ ' + text;
-      div.style.color = `rgba(180, 230, 255, ${0.3 + freshness * 0.6})`;
-      div.style.fontSize = `${13 + freshness * 6}px`;
-      div.style.fontWeight = '300';
-      div.style.fontFamily = '"PingFang SC","Microsoft YaHei",sans-serif';
-      div.style.letterSpacing = '1px';
-      div.style.textShadow = `0 0 ${20 + freshness * 30}px rgba(80,200,255,${0.1 + freshness * 0.2})`;
-      div.style.background = `rgba(10, 30, 60, ${0.1 + freshness * 0.2})`;
-      div.style.backdropFilter = 'blur(4px)';
-      div.style.padding = '4px 14px';
-      div.style.borderRadius = '30px';
-      div.style.border = `1px solid rgba(100,200,255,${0.05 + freshness * 0.15})`;
-      div.style.transition = 'all 0.8s ease';
-      return new CSS2DObject(div);
-    }
+  if (n > 0 && te > 0 && a > 0) return 'mixed_all';
+  if (n > 0 && te > 0) return 'mixed_nature_tech';
+  if (n > te && n > a) return 'nature';
+  if (te > n && te > a) return 'tech';
+  if (a > n && a > te) return 'art';
+  if (n > 0) return 'nature';
+  if (te > 0) return 'tech';
+  if (a > 0) return 'art';
+  return 'mixed_all';
+}
 
-    CONFIG.presetShadows.forEach((item) => {
-      const frag = {
-        text: item.text,
-        freshness: item.initialFreshness,
-        speed: 0.002 + Math.random() * 0.005,
-        label: null,
-        pos: new THREE.Vector3(
-          (Math.random() - 0.5) * 7,
-          -1.8 - Math.random() * 4.5,
-          (Math.random() - 0.5) * 7
-        ),
-        targetPos: new THREE.Vector3(),
-        age: Math.random() * 100,
-      };
-      const label = createFragmentLabel(frag.text, frag.freshness);
-      label.position.copy(frag.pos);
-      scene.add(label);
-      frag.label = label;
-      fragmentObjects.push(frag);
-      shadowFragments.push(frag);
-    });
+function updateUI(active) {
+  document.querySelectorAll('.phase-item').forEach(it => {
+    it.classList.remove('active','done');
+  });
+  let found = false;
+  document.querySelectorAll('.phase-item').forEach(it => {
+    if (it.dataset.phase === active) { it.classList.add('active'); found = true; }
+    else if (!found) it.classList.add('done');
+  });
+  const bar = document.getElementById('status-bar');
+  const txt = document.getElementById('status-text');
+  const labels = { idle:'待机 · 冰山未照亮', input:'输入已接收 · 解构中', body:'本体亮起 · "云"被识别',
+    wire:'沿线下行 · 能量传入冰山', shadow:'冰山浮现 · 各层经验激活', read:'扫描回传 · 影子信号上涌', respond:'回应生成 · 通道关闭' };
+  txt.textContent = labels[active] || '待机';
+  bar.classList.toggle('active', active !== 'idle');
+}
 
-    const inputEl = document.getElementById('shadowInput');
-    const submitBtn = document.getElementById('submitBtn');
-    const toastEl = document.getElementById('toast');
-    const badgeEl = document.getElementById('memory-badge');
+function showResp(t) {
+  const box = document.getElementById('response-box');
+  document.getElementById('response-text').textContent = t;
+  box.classList.add('show');
+}
+function hideResp() { document.getElementById('response-box').classList.remove('show'); }
 
-    let toastTimer = null;
+function trigger(text) {
+  if (!text.includes('云')) return;
+  context = detectContext(text);
+  phase = PHASES.INPUT; phaseTime = 0;
+  hideResp();
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  const inp = document.getElementById('shadow-input');
+  inp.classList.add('pulse');
+  setTimeout(() => inp.classList.remove('pulse'), 500);
+}
 
-    function showToast(msg, isGood = true) {
-      toastEl.textContent = msg;
-      toastEl.style.color = isGood ? '#8cc4ff' : '#ff9a8a';
-      toastEl.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
-    }
+// ── Animation Loop ──
+function updateAnim(delta) {
+  if (phase === PHASES.IDLE) return;
+  phaseTime += delta;
+  const dur = DUR[phase] || 1;
+  const pr = Math.min(phaseTime / dur, 1);
+  const ease = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+  const ep = ease(pr);
+  updateUI(phase);
 
-    function updateBadge() {
-      badgeEl.textContent = `📒 个人记忆库 · ${memoryBank.length} 条待审核`;
-    }
+  switch (phase) {
+    case PHASES.INPUT:
+      coreMat.emissiveIntensity = 0.3 + ep * 0.5;
+      glowMat.opacity = 0.06 + ep * 0.12;
+      ringMat.opacity = 0.05 + ep * 0.08;
+      if (pr >= 1) { phase = PHASES.BODY_LIT; phaseTime = 0; }
+      break;
 
-    function handleSubmit() {
-      const raw = inputEl.value.trim();
-      if (!raw) {
-        showToast('✍️ 写一句关于 "雨" 的感受吧', false);
-        return;
-      }
-      if (raw.length > 40) {
-        showToast('📏 精简到 40 字以内吧', false);
-        return;
-      }
+    case PHASES.BODY_LIT:
+      coreMat.emissiveIntensity = 0.5 + ep * 0.7;
+      glowMat.opacity = 0.12 + ep * 0.2;
+      ringMat.opacity = 0.08 + ep * 0.15;
+      bpMat.opacity = 0.25 + ep * 0.4;
+      wires.forEach(w => { w.mat.opacity = 0.06 + ep * 0.1; });
+      if (pr >= 1) { phase = PHASES.WIRE_DOWN; phaseTime = 0; }
+      break;
 
-      memoryBank.push({
-        text: raw,
-        submittedAt: Date.now(),
-        status: 'pending',
+    case PHASES.WIRE_DOWN:
+      wires.forEach(w => { w.mat.opacity = 0.16 + ep * 0.25; });
+      energyParticles.forEach(ed => {
+        ed.mat.opacity = ep * 0.7;
+        ed.t = (ed.t + delta * ed.speed * 0.5) % 1;
+        ed.mesh.position.copy(ed.curve.getPoint(ed.t * ep * 0.3));
       });
-
-      inputEl.value = '';
-      updateBadge();
-      showToast(`📒 已存入记忆库 · 等待审核：「${raw}」`, true);
-
-      setTimeout(() => {
-        const last = memoryBank[memoryBank.length - 1];
-        if (last && last.status === 'pending') {
-          const approved = Math.random() > 0.2;
-          if (approved) {
-            last.status = 'approved';
-            const newFrag = {
-              text: last.text,
-              freshness: 1.0,
-              speed: 0.003 + Math.random() * 0.004,
-              label: null,
-              pos: new THREE.Vector3(
-                (Math.random() - 0.5) * 6,
-                -1.2 - Math.random() * 2.5,
-                (Math.random() - 0.5) * 6
-              ),
-              targetPos: new THREE.Vector3(),
-              age: 0,
-            };
-            const label = createFragmentLabel(newFrag.text, 1.0);
-            label.position.copy(newFrag.pos);
-            scene.add(label);
-            newFrag.label = label;
-            fragmentObjects.push(newFrag);
-            shadowFragments.push(newFrag);
-            showToast(`✅ 审核通过 · 「${last.text}」已加入影子层 ✨`, true);
-          } else {
-            last.status = 'rejected';
-            showToast(`⏳ 「${last.text}」暂未通过审核，保留在记忆库`, false);
+      const wake = Math.max(0, (pr - 0.3) / 0.7);
+      particleSystems.forEach((ps, ci) => {
+        let tgt = 0.12;
+        if (context === 'nature' && ci === 0) tgt = 0.12 + wake * 0.55;
+        else if (context === 'tech' && ci === 1) tgt = 0.12 + wake * 0.55;
+        else if (context === 'art' && ci === 2) tgt = 0.12 + wake * 0.55;
+        else if (context === 'mixed_nature_tech' && (ci === 0 || ci === 1)) tgt = 0.12 + wake * 0.4;
+        else if (context === 'mixed_all') tgt = 0.12 + wake * 0.35;
+        else tgt = 0.12 + wake * 0.1;
+        ps.material.opacity = tgt;
+        ps.material.size = 0.06 + wake * 0.03;
+      });
+      shadowGroup.children.forEach(ch => {
+        if (ch instanceof CSS2DObject) {
+          const t = ch.element.textContent;
+          const ci = CLUSTERS.findIndex(c => c.label === t);
+          if (ci >= 0) {
+            let op = 0.25;
+            if (context === 'nature' && ci === 0) op = 0.25 + wake * 0.65;
+            else if (context === 'tech' && ci === 1) op = 0.25 + wake * 0.65;
+            else if (context === 'art' && ci === 2) op = 0.25 + wake * 0.65;
+            else if (context === 'mixed_nature_tech' && (ci === 0 || ci === 1)) op = 0.25 + wake * 0.5;
+            else if (context === 'mixed_all') op = 0.25 + wake * 0.4;
+            ch.element.style.opacity = op;
           }
-          updateBadge();
         }
-      }, 2000);
-    }
-
-    submitBtn.addEventListener('click', handleSubmit);
-    inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') handleSubmit();
-    });
-
-    renderer.domElement.addEventListener('pointerdown', () => {
-      controls.autoRotate = false;
-      setTimeout(() => { controls.autoRotate = true; }, 5000);
-    });
-
-    const clock = new THREE.Clock();
-
-    function animate() {
-      const delta = clock.getDelta();
-      const elapsed = performance.now() * 0.001;
-
-      const { pos, cols, life, speed, origin, count } = pData;
-      const pulse = Math.sin(elapsed * 0.12) * 0.4 + 0.6;
-      for (let i = 0; i < count; i++) {
-        life[i] -= speed[i] * delta * 1.8;
-        if (life[i] <= 0) {
-          life[i] = 1.0;
-          const idx = i * 3;
-          const rBase = 2.5 + Math.random() * 5.5;
-          const theta = Math.random() * Math.PI * 2;
-          const phi = Math.random() * Math.PI * 0.75;
-          const r = rBase * Math.sin(phi);
-          origin[idx] = r * Math.cos(theta) * (0.8 + Math.random() * 0.3);
-          origin[idx + 1] = -1.8 - (Math.random() * 6.0) - (Math.cos(phi) * 1.8);
-          origin[idx + 2] = r * Math.sin(theta) * (0.8 + Math.random() * 0.3);
-        }
-        const l = life[i];
-        const r = 0.10 + l * 0.40;
-        const g = 0.15 + l * 0.75;
-        const b = 0.25 + l * 0.75;
-        const pf = 1.0 + l * 0.25 * pulse;
-        cols[i * 3] = Math.min(r * pf, 1.0);
-        cols[i * 3 + 1] = Math.min(g * pf, 1.0);
-        cols[i * 3 + 2] = Math.min(b * pf, 1.0);
-
-        const floatAmp = l * 0.25;
-        const decaySink = (1 - l) * 0.6;
-        pos[i * 3] = origin[i * 3] + Math.sin(elapsed * 0.5 + i * 0.005) * 0.1 * l;
-        pos[i * 3 + 1] = origin[i * 3 + 1] + Math.sin(elapsed * 0.6 + i * 0.007) * floatAmp - decaySink;
-        pos[i * 3 + 2] = origin[i * 3 + 2] + Math.cos(elapsed * 0.5 + i * 0.005) * 0.1 * l;
-      }
-      pGeo.attributes.position.needsUpdate = true;
-      pGeo.attributes.color.needsUpdate = true;
-
-      fragmentObjects.forEach((frag) => {
-        frag.freshness -= frag.speed * delta * 1.2;
-        if (frag.freshness < 0) frag.freshness = 0;
-        if (frag.freshness > 1) frag.freshness = 1;
-
-        const el = frag.label.element;
-        const f = frag.freshness;
-        el.style.color = `rgba(180, 230, 255, ${0.15 + f * 0.65})`;
-        el.style.fontSize = `${12 + f * 7}px`;
-        el.style.textShadow = `0 0 ${15 + f * 35}px rgba(80,200,255,${0.05 + f * 0.25})`;
-        el.style.background = `rgba(10, 30, 60, ${0.05 + f * 0.25})`;
-        el.style.borderColor = `rgba(100,200,255,${0.02 + f * 0.18})`;
-
-        frag.age += delta;
-        const floatY = Math.sin(frag.age * 0.4 + frag.pos.x) * (0.08 + f * 0.15);
-        const floatX = Math.cos(frag.age * 0.3 + frag.pos.z) * (0.04 + f * 0.08);
-        const sink = (1 - f) * 0.5;
-        frag.label.position.x = frag.pos.x + floatX;
-        frag.label.position.y = frag.pos.y + floatY - sink;
-        frag.label.position.z = frag.pos.z + Math.sin(frag.age * 0.35 + frag.pos.x) * (0.04 + f * 0.08);
       });
+      if (pr >= 1) { phase = PHASES.SHADOW_LIT; phaseTime = 0; }
+      break;
 
-      controls.update();
-      renderer.render(scene, camera);
-      labelRenderer.render(scene, camera);
-      requestAnimationFrame(animate);
+    case PHASES.SHADOW_LIT:
+      const pulse = 0.5 + Math.sin(phaseTime * 2.5) * 0.2;
+      particleSystems.forEach((ps, ci) => {
+        let base = 0.55;
+        if (context === 'nature' && ci === 0) base = 0.65;
+        else if (context === 'tech' && ci === 1) base = 0.65;
+        else if (context === 'art' && ci === 2) base = 0.65;
+        else if (context === 'mixed_nature_tech' && (ci === 0 || ci === 1)) base = 0.5;
+        else if (context === 'mixed_all') base = 0.45;
+        else base = 0.35;
+        ps.material.opacity = base * pulse;
+        ps.material.size = 0.09 + Math.sin(phaseTime * 3 + ci) * 0.015;
+      });
+      wires.forEach(w => { w.mat.opacity = 0.3 + Math.sin(phaseTime * 2) * 0.12; });
+      energyParticles.forEach((ed, i) => {
+        ed.mat.opacity = 0.4 + Math.sin(phaseTime * 3 + i) * 0.25;
+        ed.t = (ed.t + delta * ed.speed * 0.25 * Math.sin(phaseTime * 0.5 + i)) % 1;
+        ed.mesh.position.copy(ed.curve.getPoint(ed.t));
+      });
+      coreMat.emissiveIntensity = 0.9 + Math.sin(phaseTime * 1.5) * 0.2;
+
+      // Fight visualization for mixed contexts
+      if (context === 'mixed_nature_tech' || context === 'mixed_all') {
+        const flash = Math.sin(phaseTime * 4) > 0;
+        const activeLayers = context === 'mixed_nature_tech' ? [0, 1] : [0, 1, 2];
+        activeLayers.forEach(li => {
+          const ps = particleSystems[li];
+          if (ps) ps.material.opacity *= flash ? 1.2 : 0.7;
+        });
+      }
+      if (pr >= 1) { phase = PHASES.READING; phaseTime = 0; }
+      break;
+
+    case PHASES.READING:
+      const rp = Math.min(phaseTime / DUR[PHASES.READING], 1);
+      particleSystems.forEach(ps => { ps.material.opacity *= (1 - rp * 0.5); });
+      energyParticles.forEach((ed, i) => {
+        ed.mat.opacity = 0.7 * (1 - rp * 0.3);
+        const up = 1 - rp;
+        ed.mesh.position.copy(ed.curve.getPoint(Math.max(0, up - i * 0.04)));
+      });
+      coreMat.emissiveIntensity = 1.0 + Math.sin(phaseTime * 3) * 0.3;
+      glowMat.opacity = 0.25 + Math.sin(phaseTime * 3) * 0.08;
+      if (rp >= 1) {
+        phase = PHASES.RESPOND; phaseTime = 0;
+        const ctx = context || 'nature';
+        const pool = RESPONSES[ctx] || RESPONSES.nature;
+        responseText = pool[Math.floor(Math.random() * pool.length)];
+      }
+      break;
+
+    case PHASES.RESPOND:
+      const rpr = Math.min(phaseTime / DUR[PHASES.RESPOND], 1);
+      showResp(responseText);
+      const fade = 1 - rpr;
+      coreMat.emissiveIntensity = Math.max(0.3, 1.2 * fade);
+      glowMat.opacity = Math.max(0.06, 0.3 * fade);
+      ringMat.opacity = Math.max(0.05, 0.15 * fade);
+      wires.forEach(w => { w.mat.opacity = Math.max(0.06, 0.4 * fade); });
+      particleSystems.forEach(ps => {
+        ps.material.opacity = Math.max(0.12, ps.material.opacity * fade);
+        ps.material.size = 0.06;
+      });
+      energyParticles.forEach(ed => { ed.mat.opacity = Math.max(0, 0.5 * fade); });
+      if (rpr >= 1) {
+        setTimeout(() => {
+          phase = PHASES.IDLE; phaseTime = 0;
+          updateUI('idle');
+          controls.autoRotate = true;
+          coreMat.emissiveIntensity = 0.3;
+          glowMat.opacity = 0.06;
+          ringMat.opacity = 0.05;
+          bpMat.opacity = 0.25;
+          wires.forEach(w => { w.mat.opacity = 0.06; });
+          particleSystems.forEach(ps => { ps.material.opacity = 0.12; ps.material.size = 0.06; });
+          shadowGroup.children.forEach(ch => {
+            if (ch instanceof CSS2DObject) ch.element.style.opacity = '0.25';
+          });
+          energyParticles.forEach(ed => { ed.mat.opacity = 0; ed.t = Math.random(); });
+        }, 1000);
+      }
+      break;
+  }
+}
+
+// ── Idle ──
+function idleUpdate(time) {
+  if (phase !== PHASES.IDLE) return;
+  const b = Math.sin(time * 0.7) * 0.02;
+  core.scale.setScalar(1 + b);
+  glowMat.opacity = 0.06 + Math.sin(time * 0.5) * 0.025;
+  ring.rotation.z = time * 0.12;
+
+  const ba = bpMesh.geometry.attributes.position;
+  const arr = ba.array;
+  for (let i = 0; i < bpCount; i++) {
+    const t = bpOff[i*3] + time * 0.2 * (1 + i * 0.02);
+    const p = bpOff[i*3+1];
+    const r = bpOff[i*3+2] + Math.sin(time * 0.4 + i) * 0.025;
+    arr[i*3] = r * Math.sin(p) * Math.cos(t);
+    arr[i*3+1] = r * Math.cos(p) + Math.sin(time * 0.25 + i * 0.5) * 0.015;
+    arr[i*3+2] = r * Math.sin(p) * Math.sin(t);
+  }
+  ba.needsUpdate = true;
+
+  particleSystems.forEach((ps, ci) => {
+    const pa = ps.geometry.attributes.position;
+    const a = pa.array;
+    const g = clusterGroups[ci];
+    for (let i = 0; i < g.length; i++) {
+      const d = g[i];
+      a[i*3] = d.basePos.x + Math.sin(time * d.drift.x * 12 + d.phase) * 0.04;
+      a[i*3+1] = d.basePos.y + Math.sin(time * d.drift.y * 12 + d.phase * 1.3) * 0.04;
+      a[i*3+2] = d.basePos.z + Math.sin(time * d.drift.z * 12 + d.phase * 0.7) * 0.04;
     }
+    pa.needsUpdate = true;
+  });
 
-    animate();
+  energyParticles.forEach(ed => {
+    if (ed.mat.opacity < 0.03) {
+      ed.mesh.position.copy(ed.curve.getPoint((time * 0.04 + ed.t * 10) % 1));
+    }
+  });
+  stars.material.opacity = 0.35 + Math.sin(time * 0.25) * 0.12;
+  wires.forEach((w, i) => { w.mat.opacity = 0.06 + Math.sin(time * 0.4 + i * 1.2) * 0.03; });
+}
 
-    window.addEventListener('resize', () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-      labelRenderer.setSize(w, h);
-    });
+let last = 0;
+function loop(t) {
+  requestAnimationFrame(loop);
+  const dt = Math.min((t - last) / 1000, 0.05);
+  last = t;
+  idleUpdate(t / 1000);
+  updateAnim(dt);
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+loop(0);
 
-    console.log('🌧️ 影子互文 · 雨 · 高维影子已加载');
-  </script>
+// ── Events ──
+document.getElementById('send-btn').addEventListener('click', () => {
+  const v = document.getElementById('shadow-input').value.trim();
+  if (v) { controls.autoRotate = false; trigger(v); }
+});
+document.getElementById('shadow-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const v = e.target.value.trim();
+    if (v) { controls.autoRotate = false; trigger(v); }
+  }
+});
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = btn.dataset.text;
+    document.getElementById('shadow-input').value = v;
+    controls.autoRotate = false;
+    btn.classList.add('active');
+    trigger(v);
+  });
+});
+window.addEventListener('resize', () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h); labelRenderer.setSize(w, h);
+});
+
+console.log('🌫️ 影子互文 · 云的三重冰山 已启动');
+</script>
 </body>
 </html>
+
+
+
+
+
+
+
