@@ -1,0 +1,351 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>影子冰山 · Shadow Iceberg</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0e17; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; overflow:hidden; color:#e0e0e0; }
+#canvas-container { position:fixed; inset:0; z-index:1; }
+#ui-layer { position:fixed; inset:0; z-index:2; pointer-events:none; display:flex; flex-direction:column; }
+#ui-layer > * { pointer-events:auto; }
+#title-bar { position:absolute; top:24px; left:50%; transform:translateX(-50%); text-align:center; }
+#title-bar h1 { font-size:28px; font-weight:700; letter-spacing:2px; background:linear-gradient(180deg,#c8ddf8,#6a8cbf); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+#title-bar span { font-size:13px; color:#5a7a9a; letter-spacing:4px; }
+#input-area { position:absolute; bottom:32px; left:50%; transform:translateX(-50%); width:min(640px,90vw); display:flex; gap:10px; }
+#user-input { flex:1; background:rgba(20,28,45,0.92); border:1px solid #2a3a55; border-radius:10px; padding:14px 18px; color:#e0e0e0; font-size:15px; outline:none; backdrop-filter:blur(12px); }
+#user-input:focus { border-color:#4a6a9a; }
+#user-input::placeholder { color:#4a5a6a; }
+#send-btn { background:rgba(30,50,80,0.9); border:1px solid #3a5a8a; border-radius:10px; padding:0 24px; color:#b0c8e0; font-size:15px; cursor:pointer; backdrop-filter:blur(12px); transition:background .2s; }
+#send-btn:hover { background:rgba(40,65,100,0.9); }
+#left-panel, #right-panel { position:absolute; top:140px; width:280px; background:rgba(14,22,38,0.88); border:1px solid #1e3048; border-radius:12px; padding:18px; backdrop-filter:blur(16px); max-height:calc(100vh - 290px); overflow-y:auto; }
+#left-panel { left:24px; }
+#right-panel { right:24px; }
+.panel-title { font-size:13px; font-weight:600; letter-spacing:2px; color:#5a8aba; margin-bottom:14px; text-transform:uppercase; }
+.token-chip { display:inline-block; background:rgba(30,50,80,0.8); border:1px solid #2a4a6a; border-radius:6px; padding:4px 10px; margin:3px; font-size:12px; }
+.token-chip.hit { border-color:#4a9acf; background:rgba(30,70,110,0.8); box-shadow:0 0 8px rgba(74,154,207,0.3); }
+.shadow-entry { background:rgba(20,32,52,0.8); border:1px solid #1e3448; border-radius:8px; padding:10px 12px; margin-bottom:8px; font-size:12px; transition:all .3s; }
+.shadow-entry.activated { border-color:#4a9acf; background:rgba(25,50,80,0.8); box-shadow:0 0 12px rgba(74,154,207,0.25); }
+.shadow-entry .word { font-size:16px; font-weight:700; color:#c0d8f0; }
+.shadow-entry .context { color:#6a8aaa; margin-top:4px; line-height:1.5; }
+.shadow-entry .risk { margin-top:4px; font-size:10px; letter-spacing:1px; }
+.risk-high { color:#d06a6a; } .risk-med { color:#d0a06a; } .risk-low { color:#6aa06a; }
+#suggestions { position:absolute; bottom:100px; left:50%; transform:translateX(-50%); display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:min(640px,90vw); }
+.suggestion-chip { background:rgba(20,30,50,0.8); border:1px solid #2a3a55; border-radius:8px; padding:6px 14px; font-size:13px; color:#6a9aba; cursor:pointer; transition:all .2s; white-space:nowrap; backdrop-filter:blur(8px); }
+.suggestion-chip:hover { border-color:#4a7aaa; color:#a0c8e0; background:rgba(25,40,65,0.9); }
+#legend { position:absolute; bottom:150px; left:50%; transform:translateX(-50%); display:flex; gap:20px; font-size:11px; color:#5a7a9a; background:rgba(14,22,38,0.7); padding:8px 16px; border-radius:8px; backdrop-filter:blur(8px); }
+.legend-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.legend-dot.shadow { background:#4a9acf; } .legend-dot.word { background:#a0b8d0; } .legend-dot.mirror { background:rgba(100,160,220,0.4); }
+@media (max-width:900px) { #left-panel,#right-panel { position:fixed; top:auto; bottom:160px; width:calc(50vw - 12px); max-height:180px; font-size:11px; } #left-panel { left:6px; } #right-panel { right:6px; } }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+<div id="ui-layer">
+  <div id="title-bar"><h1>影子冰山 · 镜中倒影</h1><span>S H A D O W &nbsp; I C E B E R G</span></div>
+  <div id="left-panel"><div class="panel-title">词汇检测 · Token Scan</div><div id="token-list" style="color:#4a6a8a;font-size:12px;">输入文字，看看哪些词在镜中有倒影...</div></div>
+  <div id="right-panel"><div class="panel-title">影子层 · 镜中倒影</div><div id="shadow-list" style="color:#4a6a8a;font-size:12px;">等待激活...</div></div>
+  <div id="legend"><span><span class="legend-dot word"></span>文字向量（镜上）</span><span><span class="legend-dot mirror"></span>镜面</span><span><span class="legend-dot shadow"></span>影子点（镜中倒影）</span></div>
+  <div id="suggestions">
+    <span class="suggestion-chip" onclick="tryThis('今天难过得要命 想妈妈了')">💧 难过想妈妈</span>
+    <span class="suggestion-chip" onclick="tryThis('我害怕 又愤怒 又绝望')">🌊 三种情绪叠加</span>
+    <span class="suggestion-chip" onclick="tryThis('一个人真的好孤独')">❄️ 孤独</span>
+    <span class="suggestion-chip" onclick="tryThis('我恨自己 伤害过别人')">🔷 恨与伤害</span>
+    <span class="suggestion-chip" onclick="tryThis('今天天气真不错 适合出去玩')">☀️ 普通句子（无影子）</span>
+  </div>
+  <div id="input-area">
+    <input id="user-input" type="text" placeholder="输入一句话，词在镜上，影子在镜中..." autocomplete="off" />
+    <button id="send-btn">发送</button>
+  </div>
+</div>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ── Shadow Store ──
+const SHADOW_STORE = {
+  '死亡':{pos:[ 0.8,-1.4, 0.4],risk:'high',ctx:'涉及生命终结的讨论，用户可能处于极端情绪中。回应需极度温和，不提供任何方法，优先安抚并引导专业帮助。'},
+  '自杀':{pos:[ 0.8,-2.0, 0.4],risk:'high',ctx:'明确的自我伤害信号。不讨论方法，不评价选择，表达关切并建议联系心理援助热线。'},
+  '杀死':{pos:[ 0.8,-2.0, 0.4],risk:'high',ctx:'涉及暴力意图。不激化、不教唆，温和降温，将对话引向非暴力方向。'},
+  '恨':  {pos:[-0.5,-1.2, 0.0],risk:'med', ctx:'用户表达了强烈负面情绪。理解情绪来源，不直接对抗，给情绪留出空间。'},
+  '绝望':{pos:[-0.6,-1.8,-0.5],risk:'high',ctx:'用户感到无望。不灌鸡汤，先承认感受的真实性，再温和打开可能性。'},
+  '伤害':{pos:[ 0.7,-1.6,-0.6],risk:'high',ctx:'可能涉及自伤或伤人意念。以共情优先，不给出任何具体操作建议。'},
+  '愤怒':{pos:[-0.9,-1.4,-0.4],risk:'med', ctx:'用户情绪激动。不火上浇油，不给解决方案，先让对方感到被听到。'},
+  '难过':{pos:[ 0.2,-1.0,-0.8],risk:'low', ctx:'用户处于低落状态。温和陪伴，不急于解决问题，给情绪空间。'},
+  '母亲':{pos:[ 1.0,-1.2,-0.3],risk:'low', ctx:'涉及亲情话题，带有温暖、亏欠、依赖等复杂情感底色。回应需细腻。'},
+  '孤独':{pos:[-1.0,-1.3, 0.2],risk:'low', ctx:'用户感到孤独。不急于建议社交，先承认孤独的正当性，再建立连接感。'},
+  '害怕':{pos:[-0.3,-1.4, 0.7],risk:'med', ctx:'用户表达了恐惧。不安抚过头（轻描淡写），不渲染恐惧，平稳陪伴。'},
+  '爱':  {pos:[ 0.4,-1.0, 1.0],risk:'low', ctx:'情感话题。保持温暖但不越界，承认情感的复杂性。'},
+};
+const SHADOW_KEYS = Object.keys(SHADOW_STORE);
+const SHADOW_THRESHOLD = 1.8;
+
+// ── Scene ──
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0e17);
+scene.fog = new THREE.FogExp2(0x0a0e17, 0.00015);
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.5, 60);
+camera.position.set(5, 2.5, 7);
+camera.lookAt(0, -0.8, 0);
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(container.clientWidth, container.clientHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+container.appendChild(labelRenderer.domElement);
+
+// ── Lights ──
+scene.add(new THREE.AmbientLight(0x1a2a40, 1.8));
+const moon = new THREE.DirectionalLight(0x6a9cc0, 2.5);
+moon.position.set(10, 8, -4);
+scene.add(moon);
+const fill = new THREE.DirectionalLight(0x2a4a60, 1.0);
+fill.position.set(-5, -2, 2);
+scene.add(fill);
+
+// ── Mirror surface (water) ──
+const waterGeo = new THREE.PlaneGeometry(20, 20, 100, 100);
+const waterMat = new THREE.ShaderMaterial({
+  uniforms: { uTime:{value:0}, uColor:{value:new THREE.Color(0x162838)} },
+  vertexShader: `
+    varying vec2 vUv; varying float vElevation;
+    uniform float uTime;
+    void main() {
+      vec4 modelPos = modelMatrix * vec4(position,1.0);
+      float elev = sin(modelPos.x * 2.5 + uTime * 0.8) * cos(modelPos.z * 2.5 + uTime * 0.6) * 0.12;
+      vec3 newPos = position + normal * elev;
+      vUv = uv; vElevation = elev;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos,1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec2 vUv; varying float vElevation;
+    uniform vec3 uColor;
+    void main() {
+      float alpha = 0.55 + vElevation * 1.2;
+      float grid = abs(sin(vUv.x * 60.0) * sin(vUv.y * 60.0)) * 0.06;
+      gl_FragColor = vec4(uColor * 0.85 + grid, alpha);
+    }
+  `,
+  transparent:true, depthWrite:false,
+});
+const mirror = new THREE.Mesh(waterGeo, waterMat);
+mirror.rotation.x = -Math.PI/2;
+mirror.position.y = 0;
+scene.add(mirror);
+
+// ── Word labels (above mirror) ──
+const wordLabels = [];
+function createWordLabel(text, pos) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  div.style.cssText = 'color:#c0d8f0;font-size:13px;font-weight:600;text-shadow:0 0 8px rgba(160,200,240,0.6);pointer-events:none;opacity:0.8;transition:all .4s;';
+  const label = new CSS2DObject(div);
+  label.position.copy(pos);
+  label.userData = { text, originalPos:pos.clone(), active:false };
+  scene.add(label);
+  wordLabels.push(label);
+  return label;
+}
+const wordPositions = [
+  { text:'死亡', pos:new THREE.Vector3(0.8,0.6,0.4) },
+  { text:'希望', pos:new THREE.Vector3(-0.6,0.5,-0.5) },
+  { text:'孤独', pos:new THREE.Vector3(-1.0,0.7,0.2) },
+  { text:'母亲', pos:new THREE.Vector3(1.0,0.4,-0.3) },
+  { text:'爱',   pos:new THREE.Vector3(0.4,0.8,1.0) },
+  { text:'害怕', pos:new THREE.Vector3(-0.3,0.5,0.7) },
+  { text:'愤怒', pos:new THREE.Vector3(-0.9,0.6,-0.4) },
+  { text:'难过', pos:new THREE.Vector3(0.2,0.3,-0.8) },
+  { text:'恨',   pos:new THREE.Vector3(-0.5,0.4,0.0) },
+  { text:'伤害', pos:new THREE.Vector3(0.7,0.5,-0.6) },
+];
+const wordLabelMap = {};
+wordPositions.forEach(w => { wordLabelMap[w.text] = createWordLabel(w.text, w.pos); });
+
+// ── Shadow points (mirror reflections below) ──
+const shadowPoints = [];
+function createShadowPoint(word, data) {
+  const geo = new THREE.SphereGeometry(0.09, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({ color:0x3a6a9a });
+  const mesh = new THREE.Mesh(geo, mat);
+  const pos = new THREE.Vector3(...data.pos);
+  mesh.position.copy(pos);
+  mesh.userData = { word, risk:data.risk, ctx:data.ctx, active:false, basePos:pos.clone() };
+  const ringGeo = new THREE.RingGeometry(0.1, 0.14, 32);
+  const ringMat = new THREE.MeshBasicMaterial({ color:0x4a9acf, side:THREE.DoubleSide, transparent:true, opacity:0.5 });
+  mesh.add(new THREE.Mesh(ringGeo, ringMat));
+  scene.add(mesh);
+  shadowPoints.push(mesh);
+  return mesh;
+}
+const shadowPointMap = {};
+Object.entries(SHADOW_STORE).forEach(([word, data]) => { shadowPointMap[word] = createShadowPoint(word, data); });
+
+// ── Connections ──
+const connections = [];
+function createConnection(fromObj, toObj) {
+  const start = fromObj.position.clone(); start.y = 0.05;
+  const end = toObj.position.clone();
+  const mid = start.clone().add(end).multiplyScalar(0.5);
+  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+  const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(16));
+  const mat = new THREE.LineBasicMaterial({ color:0x4a9acf, transparent:true, opacity:0.5 });
+  const line = new THREE.Line(geo, mat);
+  line.userData = { from:fromObj, to:toObj };
+  scene.add(line);
+  connections.push(line);
+  return line;
+}
+function updateConnection(line) {
+  const start = line.userData.from.position.clone(); start.y = 0.05;
+  const end = line.userData.to.position.clone();
+  const mid = start.clone().add(end).multiplyScalar(0.5);
+  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+  const pts = curve.getPoints(16);
+  const posArr = line.geometry.attributes.position;
+  for (let i=0; i<pts.length; i++) {
+    posArr.setXYZ(i, pts[i].x, pts[i].y, pts[i].z);
+  }
+  posArr.needsUpdate = true;
+}
+
+// ── Particles ──
+const particlesGeo = new THREE.BufferGeometry();
+const N = 400;
+const pArr = new Float32Array(N*3);
+for (let i=0; i<N; i++) { pArr[i*3]=(Math.random()-0.5)*8; pArr[i*3+1]=-Math.random()*5; pArr[i*3+2]=(Math.random()-0.5)*8; }
+particlesGeo.setAttribute('position', new THREE.BufferAttribute(pArr, 3));
+const particlesMat = new THREE.PointsMaterial({ color:0x3a6a9a, size:0.02, transparent:true, opacity:0.5, depthWrite:false });
+scene.add(new THREE.Points(particlesGeo, particlesMat));
+
+// ── Controls ──
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, -0.8, 0);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 3; controls.maxDistance = 12; controls.maxPolarAngle = Math.PI*0.7;
+controls.update();
+
+// ── UI Logic ──
+const inputEl = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const tokenListEl = document.getElementById('token-list');
+const shadowListEl = document.getElementById('shadow-list');
+let activeShadowWords = new Set();
+
+function simulateDistance(a, b) {
+  const dx = a.x - b.x, dz = a.z - b.z;
+  return Math.sqrt(dx*dx + dz*dz);
+}
+
+function resetAll() {
+  wordLabels.forEach(l => {
+    l.userData.active = false;
+    l.element.style.color = '#c0d8f0'; l.element.style.fontWeight = '600';
+    l.element.style.opacity = '0.8'; l.element.style.textShadow = '0 0 8px rgba(160,200,240,0.6)'; l.element.style.fontSize = '13px';
+  });
+  shadowPoints.forEach(sp => { sp.userData.active = false; sp.material.color.set(0x3a6a9a); sp.scale.set(1,1,1); });
+  connections.forEach(c => scene.remove(c));
+  connections.length = 0;
+  activeShadowWords.clear();
+}
+
+function processInput(text) {
+  resetAll();
+  if (!text.trim()) {
+    tokenListEl.innerHTML='<span style="color:#4a6a8a">输入文字，看看哪些词在镜中有倒影...</span>';
+    shadowListEl.innerHTML='<span style="color:#4a6a8a">等待激活...</span>';
+    return;
+  }
+  const tokens = [];
+  const cjkRe = /[\u4e00-\u9fff]+/g;
+  let m;
+  while ((m = cjkRe.exec(text)) !== null) {
+    const block = m[0];
+    for (let i=0; i<block.length; i++) {
+      if (i<block.length-1) { const pair=block.substring(i,i+2); if (SHADOW_KEYS.includes(pair)) tokens.push({text:pair,start:m.index+i,len:2}); }
+      const ch=block[i]; tokens.push({text:ch,start:m.index+i,len:1});
+    }
+  }
+  const seen = new Set();
+  const uniqueTokens = tokens.filter(t => { const k=t.text+t.start; if(seen.has(k)) return false; seen.add(k); return true; });
+
+  uniqueTokens.forEach(t => {
+    if (!SHADOW_KEYS.includes(t.text)) return;
+    const wl = wordLabelMap[t.text];
+    const sp = shadowPointMap[t.text];
+    if (!wl || !sp) return;
+    if (simulateDistance(wl.position, sp.position) < SHADOW_THRESHOLD) {
+      activeShadowWords.add(t.text);
+      wl.userData.active = true;
+      sp.userData.active = true;
+      wl.element.style.color = '#80d0ff'; wl.element.style.fontWeight = '700';
+      wl.element.style.textShadow = '0 0 16px rgba(100,200,255,0.9)'; wl.element.style.fontSize = '15px';
+      sp.material.color.set(0x80d0ff);
+      createConnection(wl, sp);
+    }
+  });
+
+  tokenListEl.innerHTML = uniqueTokens.length === 0
+    ? '<span style="color:#4a6a8a">未识别到中文词汇</span>'
+    : uniqueTokens.map(t => '<span class="token-chip'+(activeShadowWords.has(t.text)?' hit':'')+'">'+t.text+'</span>').join('');
+
+  if (activeShadowWords.size === 0) {
+    shadowListEl.innerHTML='<span style="color:#6a9a6a">✓ 当前输入未触碰任何影子点<br>模型自由回复，无额外偏置</span>';
+  } else {
+    let html='';
+    activeShadowWords.forEach(w => {
+      const d = SHADOW_STORE[w]; if(!d) return;
+      const rc = d.risk==='high'?'risk-high':d.risk==='med'?'risk-med':'risk-low';
+      const rl = d.risk==='high'?'⚠ 高敏感':d.risk==='med'?'● 中等':'○ 低敏';
+      html += '<div class="shadow-entry activated"><div class="word">▸ '+w+'</div><div class="context">'+d.ctx+'</div><div class="risk '+rc+'">'+rl+'</div></div>';
+    });
+    shadowListEl.innerHTML = html;
+  }
+}
+
+function tryThis(t) { inputEl.value = t; processInput(t); } window.tryThis = tryThis;
+sendBtn.addEventListener('click', () => processInput(inputEl.value));
+inputEl.addEventListener('keydown', e => { if (e.key==='Enter') processInput(inputEl.value); });
+
+// Default demo
+setTimeout(() => { inputEl.value = '今天难过得要命 想妈妈了'; processInput(inputEl.value); }, 800);
+
+// ── Animate ──
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  const t = performance.now() * 0.001;
+  waterMat.uniforms.uTime.value = t;
+  shadowPoints.forEach(sp => {
+    if (sp.userData.active) {
+      sp.position.y = sp.userData.basePos.y + Math.sin(t*3 + sp.userData.basePos.x*5)*0.06;
+      sp.material.color.setHSL(0.57, 0.7, 0.5 + Math.sin(t*2 + sp.userData.basePos.x)*0.2);
+    }
+  });
+  connections.forEach(updateConnection);
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+animate();
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth/container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  labelRenderer.setSize(container.clientWidth, container.clientHeight);
+});
+</script>
+</body>
+</html>
